@@ -1,5 +1,5 @@
 from math import log
-
+import operator
 def cal_shannon_ent(dataset):
     num_entries = len(dataset)
     labels_counts ={}
@@ -21,7 +21,7 @@ def create_dataset():
     return dataset, labels
 
 dataset, labels = create_dataset()
-print(cal_shannon_ent(dataset))
+#print(cal_shannon_ent(dataset))
 
 def split_dataset(dataset, axis, value):
     ret_dataset = []
@@ -60,4 +60,32 @@ def choose_best_feature_split(dataset):
             best_feature = i
     return best_feature
 
-print(choose_best_feature_split(dataset_test))
+#print(choose_best_feature_split(dataset_test))
+
+def majority_cnt(class_list):
+    class_count={}
+    for vote in class_list:
+        if vote not in class_count.keys():class_count[vote]=0
+        class_count[vote]+=1
+    sorted_class_count=sorted(class_count.items(),key=operator.itemgetter(1), reverse=True)
+    return sorted_class_count
+    
+def creat_tree(dataset, labels):
+    class_list=[example[-1] for example in dataset]
+    if class_list.count(class_list[0])==len(class_list):
+        return class_list[0]
+    if len(dataset[0])==1:
+        return majority_cnt(class_list)
+    best_feat=choose_best_feature_split(dataset)
+    best_feat_label=labels[best_feat]
+    my_tree={best_feat_label:{}}
+    del(labels[best_feat])
+    feat_values=[example[best_feat] for example in dataset]
+    unique_vals=set(feat_values)
+    for value in unique_vals:
+        sub_labels=labels[:]
+        my_tree[best_feat_label][value]=creat_tree(split_dataset(dataset,best_feat,value),sub_labels)
+    return my_tree
+
+my_data, labels=create_dataset()
+my_tree=creat_tree(my_data, labels)
